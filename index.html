@@ -3,36 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Private Webpage</title>
+  <title>Private Portal</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-      background-color: #f4f4f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
     }
     .card {
-      background: white;
-      padding: 30px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
       border-radius: 12px;
-      display: inline-block;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      max-width: 400px;
+      padding: 32px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      cursor: pointer;
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .btn {
+      background-color: #3b82f6;
+      color: #ffffff;
       border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.2s ease;
+    }
+    .btn:hover {
+      background-color: #2563eb;
+    }
+    .btn-secondary {
+      background-color: #475569;
+      margin-top: 12px;
+    }
+    .btn-secondary:hover {
+      background-color: #334155;
+    }
+    #error-box {
+      display: none;
+      margin-top: 16px;
+      padding: 12px;
+      background-color: #450a0a;
+      border: 1px solid #991b1b;
+      color: #fca5a5;
       border-radius: 6px;
-      background-color: #4285f4;
-      color: white;
-      font-weight: bold;
+      font-size: 0.85rem;
+      text-align: left;
+      word-break: break-word;
     }
-    button:hover {
-      background-color: #357ae8;
-    }
-    #secret-content {
+    #protected-content {
       display: none;
     }
   </style>
@@ -40,66 +82,76 @@
 <body>
 
   <div class="card">
-    <div id="login-screen">
-      <h2>Private Area</h2>
-      <p>Please log in with your Google Account to continue.</p>
-      <button id="login-btn">Log In with Google</button>
+    <!-- Unauthenticated View -->
+    <div id="auth-screen">
+      <h1>Restricted Access</h1>
+      <p>Log in with your authorized Google account to view this website.</p>
+      <button id="login-btn" class="btn">Sign in with Google</button>
+      <div id="error-box"></div>
     </div>
 
-    <div id="secret-content">
-      <h2>Welcome Back! 🎉</h2>
-      <p>This is your private website content.</p>
-      <button id="logout-btn">Log Out</button>
+    <!-- Authenticated View -->
+    <div id="protected-content">
+      <h1>Access Granted</h1>
+      <p>Welcome back! You are viewing private content.</p>
+      <!-- ADD YOUR PRIVATE WEBSITE CONTENT BELOW -->
+      
+      <div style="margin: 20px 0; padding: 15px; background: #0f172a; border-radius: 6px;">
+        <p style="color: #38bdf8; margin: 0;">Your protected data goes here.</p>
+      </div>
+
+      <!-- ADD YOUR PRIVATE WEBSITE CONTENT ABOVE -->
+      <button id="logout-btn" class="btn btn-secondary">Sign Out</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getAuth, 
+      signInWithPopup, 
+      signInWithRedirect, 
+      getRedirectResult, 
+      GoogleAuthProvider, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // PASTE YOUR REAL FIREBASE KEYS HERE
+    // IMPORTANT: Fill in your exact Firebase credentials below
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
+      apiKey: "YOUR_FIREBASE_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
       projectId: "YOUR_PROJECT_ID",
       storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
       appId: "YOUR_APP_ID"
     };
 
+    // Explicitly allowed account
     const ALLOWED_EMAIL = "cpry1968@csd99.org";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
+    const authScreen = document.getElementById("auth-screen");
+    const protectedContent = document.getElementById("protected-content");
     const loginBtn = document.getElementById("login-btn");
     const logoutBtn = document.getElementById("logout-btn");
-    const loginScreen = document.getElementById("login-screen");
-    const secretContent = document.getElementById("secret-content");
+    const errorBox = document.getElementById("error-box");
 
-    loginBtn.addEventListener("click", () => {
-      signInWithRedirect(auth, provider);
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+
+    // Process redirect authentication state on page load
+    getRedirectResult(auth).catch((error) => {
+      showError("Redirect auth error: " + error.message);
     });
 
-    logoutBtn.addEventListener("click", () => {
-      signOut(auth);
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        if (user.email === ALLOWED_EMAIL) {
-          loginScreen.style.display = "none";
-          secretContent.style.display = "block";
-        } else {
-          alert("Access Denied: Only the owner can view this page.");
-          signOut(auth);
-        }
-      } else {
-        loginScreen.style.display = "block";
-        secretContent.style.display = "none";
-      }
-    });
-  </script>
-</body>
-</html>
+    // Login Handler: Tries popup first, falls back to redirect if blocked
+    loginBtn.addEventListener("click", async () => {
+      errorBox.style.display = "none";
+      try {
+        await signInWithPopup(auth,
