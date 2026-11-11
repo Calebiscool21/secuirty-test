@@ -1,117 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Private Webpage</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-      background-color: #f4f4f9;
-    }
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      display: inline-block;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-    }
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      background-color: #4285f4;
-      color: white;
-      font-weight: bold;
-    }
-    button:hover {
-      background-color: #357ae8;
-    }
-    #secret-content {
-      display: none; /* Hidden until authorized */
-    }
-  </style>
-</head>
-<body>
+// Add signInWithRedirect to your import list:
+import { 
+  getAuth, 
+  signInWithRedirect, 
+  GoogleAuthProvider, 
+  signOut, 
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-  <div class="card">
-    <!-- Screen shown before logging in -->
-    <div id="login-screen">
-      <h2>Private Area</h2>
-      <p>Please log in with your Google Account to continue.</p>
-      <button id="login-btn">Log In with Google</button>
-    </div>
-
-    <!-- Hidden content shown only to YOU -->
-    <div id="secret-content">
-      <h2>Welcome Back! 🎉</h2>
-      <p>This is your private website content.</p>
-      <button id="logout-btn">Log Out</button>
-    </div>
-  </div>
-
-  <!-- Load Firebase Libraries -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    // 1. Paste your Firebase keys from Step 1 here
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    // 2. Allowed email set to your account
-    const ALLOWED_EMAIL = "cpry1968@csd99.org";
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    const loginBtn = document.getElementById("login-btn");
-    const logoutBtn = document.getElementById("logout-btn");
-    const loginScreen = document.getElementById("login-screen");
-    const secretContent = document.getElementById("secret-content");
-
-    // Handle Login Button Click
-    loginBtn.addEventListener("click", () => {
-      signInWithPopup(auth, provider)
-        .catch((error) => console.error("Login failed:", error));
-    });
-
-    // Handle Logout Button Click
-    logoutBtn.addEventListener("click", () => {
-      signOut(auth);
-    });
-
-    // Check login state whenever it changes
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        if (user.email === ALLOWED_EMAIL) {
-          // Success! Show secret content
-          loginScreen.style.display = "none";
-          secretContent.style.display = "block";
-        } else {
-          // Wrong account -> kick them out
-          alert("Access Denied: Only the owner can view this page.");
-          signOut(auth);
-        }
-      } else {
-        // Logged out state
-        loginScreen.style.display = "block";
-        secretContent.style.display = "none";
-      }
-    });
-  </script>
-</body>
-</html>
+// Change your login button event listener from signInWithPopup to signInWithRedirect:
+loginBtn.addEventListener("click", () => {
+  signInWithRedirect(auth, provider);
+});
