@@ -33,21 +33,19 @@
       background-color: #357ae8;
     }
     #secret-content {
-      display: none; /* Hidden until authorized */
+      display: none;
     }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <!-- Screen shown before logging in -->
     <div id="login-screen">
       <h2>Private Area</h2>
       <p>Please log in with your Google Account to continue.</p>
       <button id="login-btn">Log In with Google</button>
     </div>
 
-    <!-- Hidden content shown only to YOU -->
     <div id="secret-content">
       <h2>Welcome Back! 🎉</h2>
       <p>This is your private website content.</p>
@@ -55,12 +53,11 @@
     </div>
   </div>
 
-  <!-- Load Firebase Libraries -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // 1. Replace with your actual Firebase keys from Step 1
+    // PASTE YOUR REAL FIREBASE KEYS HERE
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -70,10 +67,8 @@
       appId: "YOUR_APP_ID"
     };
 
-    // 2. Allowed email
     const ALLOWED_EMAIL = "cpry1968@csd99.org";
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
@@ -83,30 +78,24 @@
     const loginScreen = document.getElementById("login-screen");
     const secretContent = document.getElementById("secret-content");
 
-    // Handle Login Button Click using Redirect (prevents popup blocks)
     loginBtn.addEventListener("click", () => {
       signInWithRedirect(auth, provider);
     });
 
-    // Handle Logout Button Click
     logoutBtn.addEventListener("click", () => {
       signOut(auth);
     });
 
-    // Check login state whenever page loads or updates
     onAuthStateChanged(auth, (user) => {
       if (user) {
         if (user.email === ALLOWED_EMAIL) {
-          // Success! Show secret content
           loginScreen.style.display = "none";
           secretContent.style.display = "block";
         } else {
-          // Wrong account -> kick them out
           alert("Access Denied: Only the owner can view this page.");
           signOut(auth);
         }
       } else {
-        // Logged out state
         loginScreen.style.display = "block";
         secretContent.style.display = "none";
       }
